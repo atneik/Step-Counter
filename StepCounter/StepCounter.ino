@@ -97,6 +97,9 @@ volatile int caliState= LOW;
 PressureSensor sensor1 = PressureSensor(0, 0);
 PressureSensor sensor2 = PressureSensor(1, 0);
 
+//indicator LED
+int indicatePin = 9;
+
 void setup() {
   Serial.begin(9600);
   /*create byte char for*/
@@ -107,6 +110,7 @@ void setup() {
   /*attach interrupts for syncing and calibrating*/
   attachInterrupt(0, sync, RISING);
   attachInterrupt(1, cali, RISING);
+  pinMode(indicatePin, OUTPUT);
 }
 
 void loop() {
@@ -130,7 +134,7 @@ lcd.setCursor(0, 1);
  lcd.print("Steps: ");
  lcd.print(sensor1.getSteps()+sensor2.getSteps());
  
- lcd.setCursor(13, 0);
+ lcd.setCursor(14, 0);
   /*print only if the value is greater than zero*/
  if(sensor2.getValuePrev()>=0)
    lcd.write(byte(sensor2.getValuePrev()));
@@ -152,7 +156,7 @@ lcd.setCursor(0, 1);
     sensor2.resetSteps();
     lcd.clear();
     lcd.print("SYNCING..");
-    delay(3000);
+    blinkWait(4);
   }
   
  /*If caliberation interrupt was called then reset its value*/
@@ -163,7 +167,7 @@ lcd.setCursor(0, 1);
     sensor2.calibrateCurr();
     lcd.clear();
     lcd.print("CALIBRATING..");
-    delay(3000);
+    blinkWait(4);
   }
   
  delay(10);
@@ -175,4 +179,13 @@ void sync(){
 
 void cali(){
  caliState = HIGH;
+}
+
+void blinkWait(int times) {
+  for(int i = 0; i<times; i++){
+    digitalWrite(indicatePin, HIGH);
+    delay(100);
+    digitalWrite(indicatePin, LOW);
+    delay(200);
+  }
 }
