@@ -20,7 +20,6 @@ class PressureSensor {
     boolean flag;
     
   public:
-    PressureSensor(){}
     PressureSensor(int pin, int cali){
       fsrAnalogPin = pin;
       fsrReadingPrev = 0;
@@ -94,11 +93,12 @@ LiquidCrystal lcd(12, 11, 5, 4, 7, 6);
 volatile int syncState= LOW;
 volatile int caliState= LOW;
 
-PressureSensor sensor;
+//(pin, cali)
+PressureSensor sensor1 = PressureSensor(0, 0);
+PressureSensor sensor2 = PressureSensor(1, 0);
 
 void setup() {
   Serial.begin(9600);
-  //sensor = new PressureSensor(0, 0);
   /*create byte char for*/
   for(int i=0; i<8; i++){
     lcd.createChar(i, bar[i]);
@@ -110,32 +110,46 @@ void setup() {
 }
 
 void loop() {
-  sensor.readValue();
+  sensor1.readValue();
+  sensor2.readValue();
   lcd.clear();
  /*print only if the value is greater than zero*/
- if(sensor.getValuePrev()>=0)
-   lcd.write(byte(sensor.getValuePrev()));
+ if(sensor1.getValuePrev()>=0)
+   lcd.write(byte(sensor1.getValuePrev()));
  else
     lcd.write(byte(0));
     
- if(sensor.getValue()>=0)
-   lcd.write(byte(sensor.getValue()));
+ if(sensor1.getValue()>=0)
+   lcd.write(byte(sensor1.getValue()));
  else
     lcd.write(byte(0));
  
-
+lcd.setCursor(0, 1);
  //Serial.print("Steps: ");
  //Serial.println(nSteps);
- lcd.print(" Steps: ");
- lcd.print(sensor.getSteps());
+ lcd.print("Steps: ");
+ lcd.print(sensor1.getSteps()+sensor2.getSteps());
+ 
+ lcd.setCursor(13, 0);
+  /*print only if the value is greater than zero*/
+ if(sensor2.getValuePrev()>=0)
+   lcd.write(byte(sensor2.getValuePrev()));
+ else
+    lcd.write(byte(0));
+    
+ if(sensor2.getValue()>=0)
+   lcd.write(byte(sensor2.getValue()));
+ else
+    lcd.write(byte(0));
 
  /*If sync interrupt was called then send the value to serial port*/
  
   if(syncState == HIGH){
     Serial.println("save: ");
-    Serial.println(sensor.getSteps());
+    Serial.println(sensor1.getSteps()+sensor2.getSteps());
     syncState = LOW;
-    sensor.resetSteps();
+    sensor1.resetSteps();
+    sensor2.resetSteps();
     lcd.clear();
     lcd.print("SYNCING..");
     delay(3000);
@@ -145,7 +159,8 @@ void loop() {
   
   if(caliState == HIGH){
     caliState = LOW;
-    sensor.calibrateCurr();
+    sensor1.calibrateCurr();
+    sensor2.calibrateCurr();
     lcd.clear();
     lcd.print("CALIBRATING..");
     delay(3000);
