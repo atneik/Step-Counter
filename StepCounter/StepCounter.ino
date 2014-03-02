@@ -19,6 +19,7 @@ LiquidCrystal lcd(12, 11, 5, 4, 7, 6);
 /*For interrupt state 0 and 1 respectively*/
 volatile int syncState= LOW;
 volatile int caliState= LOW;
+char processingState = ' ';
 
 //(pin, cali)
 PressureSensor sensor1 = PressureSensor(0, 0);
@@ -61,6 +62,15 @@ lcd.setCursor(0, 1);
  lcd.print("Steps: ");
  lcd.print(sensor1.getSteps()+sensor2.getSteps());
  
+ if (Serial.available()){
+    processingState = Serial.read();
+ }
+  
+ if(processingState == 'C'){
+   lcd.setCursor(15, 1);
+   lcd.print(processingState);
+ }
+ 
  lcd.setCursor(14, 0);
   /*print only if the value is greater than zero*/
  if(sensor2.getValuePrev()>=0)
@@ -73,10 +83,11 @@ lcd.setCursor(0, 1);
  else
     lcd.write(byte(0));
 
+ Serial.println("C");
  /*If sync interrupt was called then send the value to serial port*/
  
   if(syncState == HIGH){
-    Serial.println("save: ");
+    Serial.print("C,");
     Serial.println(sensor1.getSteps()+sensor2.getSteps());
     syncState = LOW;
     sensor1.resetSteps();
@@ -97,7 +108,8 @@ lcd.setCursor(0, 1);
     blinkWait(4);
   }
   
- delay(10);
+ delay(100);
+ Serial.flush();
 }
 
 void sync(){
